@@ -3,6 +3,36 @@
   grid-template-rows: auto auto;
   margin:0 auto;
   padding:1em;
+  .messages{
+    position: relative;
+    background: blue;
+    >div{
+      position: absolute;
+      bottom:0; left:0; right:0;
+      opacity: 0;
+      transition: all .5s ease;
+      &.visible{
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+    .win{
+      text-align: center;
+      padding:1em;
+      margin-bottom:.5em;
+      color:darkgreen;
+      font-weight: bold;
+      transform: translateX(100px)
+    }
+    .lost{
+      text-align: center;
+      padding:1em;
+      margin-bottom:.5em;
+      color:red;
+      font-weight: bold;
+      transform: translateX(-100px)
+    }
+  } 
 }
 .board{
   border:1px solid #ccc;
@@ -23,14 +53,19 @@
     }
     &[flag]{
       background-image:url("img/flag.png");
-      background-size: cover;
+      background-size: 80%;
+      background-repeat: no-repeat;
+      background-position: center; 
     }
     &.good{
       background: #f6f6f6;
       border-width:1px;
     }
     &.bomb{
-      background: red;
+      background-image:url("img/bomb.svg");
+      background-size: 80%;
+      background-repeat: no-repeat;
+      background-position: center; 
     }
   }
 }
@@ -39,5 +74,9 @@
   select,button{
     padding:1em;
     margin-bottom:1em;
+  }
+  p{
+    display: flex;
+    justify-content: space-between;
   }
 }

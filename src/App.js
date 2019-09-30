@@ -13,6 +13,8 @@ const Cell = props => {
   );
 };
 
+
+
 const levels = [
   {width:10,height:10,mines:10},
   {width:15,height:15,mines:30},
@@ -28,10 +30,15 @@ export default class App extends React.Component {
       height: levels[0].height,
       mines: levels[0].mines,
       board: [],
+      time:0,
       finished: false
     };
+
+    this.timer = 0;
+    this.getDiffTime = this.getDiffTime.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.newGame = this.newGame.bind(this);
+    this.gameOver = this.gameOver.bind(this);
     this.changeLevel = this.changeLevel.bind(this);
   }
 
@@ -40,11 +47,25 @@ export default class App extends React.Component {
     this.newGame()
   }
 
+  gameOver(won){
+    this.setState({...this.state, finished:true})
+    clearInterval(this.timer);
+    if(!won){
+      console.log("Game over",`Your time is ${this.getDiffTime()}`);
+      document.querySelector(".lost").classList.add("visible");
+    } else{
+      console.log("You have won",`Your time is ${this.getDiffTime()}`);
+      document.querySelector(".win").classList.add("visible");
+      document.querySelector(".win span").innerHTML = this.getDiffTime();
+    }
+    
+  }
+
   handleClick(e) {
     e.preventDefault();
 
     if(this.state.finished){
-      console.log("Game over");
+      console.log("Game has already finished");
       return;
     }
 
@@ -55,9 +76,11 @@ export default class App extends React.Component {
         let value = this.state.board[e.target.dataset.index]
 
         if(value===-1){
+
           //BOMB CLICKED, GAME OVER
           e.target.classList.add("bomb");
-          this.setState({...this.state, finished:true})
+          this.gameOver(false);
+
         } if(value>=0){
           //NON BOMB CLICKED
           e.target.classList.add("good");
@@ -85,13 +108,12 @@ export default class App extends React.Component {
 
       //CHECK IF WON
       if(document.querySelectorAll(".board button[class='good']").length === this.state.height * this.state.width - this.state.mines){
-        this.setState({...this.state,finished:true});
-        console.log("Win")
+        this.gameOver(true);
       }
 
     } else if(e.type==="contextmenu"){
       // HANDLE RIGHT CLICK
-      if(!e.target.hasAttribute("flag")){
+      if(!e.target.hasAttribute("flag") && ![...e.target.classList].includes("good")){
         e.target.setAttribute("flag","") //SET FLAG
       } else {
         e.target.removeAttribute("flag"); //REMOVE FLAG
@@ -108,23 +130,23 @@ export default class App extends React.Component {
 
     let emptyFields = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
     if(row===0){
-      emptyFields = emptyFields.filter(item=>{
-        return item[1]!==-1
+      emptyFields = emptyFields.filter(field=>{
+        return field[1]!==-1
       })
     }
     if(row===this.state.height-1){
-      emptyFields = emptyFields.filter(item=>{
-        return item[1]!==1
+      emptyFields = emptyFields.filter(field=>{
+        return field[1]!==1
       })
     }
     if(col===0){
-      emptyFields = emptyFields.filter(item=>{
-        return item[0]!==-1
+      emptyFields = emptyFields.filter(field=>{
+        return field[0]!==-1
       })
     }
     if(col===this.state.width-1){
-      emptyFields = emptyFields.filter(item=>{
-        return item[0]!==1
+      emptyFields = emptyFields.filter(field=>{
+        return field[0]!==1
       })
     }
 
@@ -148,12 +170,14 @@ export default class App extends React.Component {
   }
 
   newGame(){
+    [...document.querySelectorAll(".messages div")].forEach(el=>el.classList.remove("visible"));
     //SET NEW WIDTH OF ROW
     document.querySelector(".board").setAttribute("style",`--col:${this.state.width}`)
     //GENERATING NEW BOARD WITH VALUES FROM STATE
     this.setState({
       ...this.state,
       finished:false,
+      time:new Date().getTime(),
       board: minesweeper(this.state.width, this.state.height, this.state.mines)
     });
     //RESET ALL THE BUTTONS
@@ -163,12 +187,28 @@ export default class App extends React.Component {
       button.removeAttribute("flag");
       return button;
     });
+
+    this.timer = setInterval(async ()=>{
+      document.querySelector("#timer span").innerHTML = this.getDiffTime();
+    },1000)
+    
+  }
+
+  getDiffTime(){
+    const diff = Math.floor((new Date().getTime() - this.state.time) / 1000);
+    const seconds = diff % 60 < 10 ? "0"+diff%60 : diff % 60;
+    const minutes = Math.floor(diff / 60) < 10 ? "0"+Math.floor(diff/60) : Math.floor(diff / 60);
+    return `${minutes}:${seconds}`;
   }
 
   render() {
     return (
       <div className="App">
-
+        <div className="messages">
+          <div className="win">Congratulation you have won!<br/>Your time is <span>00:00</span></div>
+          <div className="lost">You have lost!</div>
+        </div>
+        
         <div className="board">
           {this.state.board.map((item,index)=>{
             return <Cell key={index} onClick={this.handleClick} index={index} flag></Cell>
@@ -176,6 +216,7 @@ export default class App extends React.Component {
         </div>
 
         <div className="menu">
+          <p id="timer">Time<span>00:00</span></p>
           <select name="" id="" onChange={this.changeLevel}>
             <option value="1">EASY (10x10 / 10 mines)</option>
             <option value="2">MEDIUM (15x15 / 30 mines)</option>
