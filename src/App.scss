@@ -1,0 +1,42 @@
+.App {
+  display: inline-grid;
+  grid-template-rows: auto auto;
+  margin:0 auto;
+  padding:1em;
+}
+.board{
+  border:1px solid #ccc;
+  display: grid;
+  padding:1em;
+  grid-template-columns: repeat(var(--col),1fr);
+  margin-bottom:1em;
+
+ button[type="button"]{
+    display:block;
+    border:1px solid #ccc;
+    outline:none;
+    height:30px; width:30px;
+    font-weight: bold;
+    background-image: linear-gradient(to top,#ddd,#eee);
+    &[disabled]{
+      color:yellow;
+    }
+    &[flag]{
+      background-image:url("img/flag.png");
+      background-size: cover;
+    }
+    &.good{
+      background: #f6f6f6;
+    }
+    &.bomb{
+      background: red;
+    }
+  }
+}
+.menu{
+  display: grid;
+  select,button{
+    padding:1em;
+    margin-bottom:1em;
+  }
+}

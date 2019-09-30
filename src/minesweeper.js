@@ -57,6 +57,5 @@ module.exports = (w, h, m) => {
     }
 
   }
-  console.log(field.length,field)
   return field;
 };
