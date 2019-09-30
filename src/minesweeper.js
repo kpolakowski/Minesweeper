@@ -1,61 +1,63 @@
-module.exports = (w, h, m) => {
-  const field = [];
-  for (let i = 0; i < w * h; i++) {
-    field.push(0);
+module.exports = (width, height, mines) => {
+  const mineField = [];
+  for (let i = 0; i < width * height; i++) {
+    mineField.push(0);
   }
+  //0 INDICATES THAT THERE IS NO MINE ON FIELD
 
   // GENERATE MINES
-  for (let i = 0; i < m; i++) {
+  for (let i = 0; i < mines; i++) {
     let row, col;
     // if item is already -1, x and y indexes are generated again
     do {
-      row = Math.floor(Math.random() * w);
-      col = Math.floor(Math.random() * h);
-    } while (field[row*h + col] === -1);
+      row = Math.floor(Math.random() * width);
+      col = Math.floor(Math.random() * height);
+    } while (mineField[row*height + col] === -1);
     // if it is 0, than it is changed to -1
-    field[row*h+col] = -1;
+    mineField[row*height+col] = -1;
   }
+  //-1 INDICATES THAT THERE IS MINE ON FIELD
  
   // COUNTING MINES AROUND
-  for (let i = 0; i < w * h; i++) {
-    // coordinates of currently checked item
-    let col = (i % w);
-    let row = Math.floor(i / w);
+  for (let i = 0; i < width * height; i++) {
+    // fieldsAround of currently checked item
+    let col = (i % width);
+    let row = Math.floor(i / width);
     // 0 INDICATES THAT THERE IS NO MINE ON THAT FIELD
-    if(field[row*w+col]===0){ 
+    if(mineField[row*width+col]===0){ 
       // COORDINATES OF EACH ELEMENT AROUND CURRENT FIELD
-      let coordinates = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
+      let fieldsAround = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
       // [-1,-1] [0,-1] [1,-1]
       // [-1, 0] [ EL ] [1, 0]
       // [-1, 1] [0, 1] [1, 1]
       if(row===0){
-        //DONT CHECK UPPER ROW
-        coordinates = coordinates.filter(item=>{
-          return item[1]!==-1
+        //EXCLUDE UPPER ROW (WITH SECOND VALUE EQUAL TO -1)
+        fieldsAround = fieldsAround.filter(field=>{
+          return field[1]!==-1
         })
       }
-      if(row===Math.floor(field.length/w)-1){
-        //DONT CHECK LOWER ROW
-        coordinates = coordinates.filter(item=>{
-          return item[1]!==1
+      if(row===Math.floor(mineField.length/width)-1){
+        //EXCLUDE LOWER ROW (WITH SECOND VALUE EQUAL TO 1)
+        fieldsAround = fieldsAround.filter(field=>{
+          return field[1]!==1
         })
       }
       if(col===0){
-        //DONT CHECK LEFT COLUMN
-        coordinates = coordinates.filter(item=>{
-          return item[0]!==-1
+        //EXCLUDE LEFT COLUMN (WITH FIRST VALUE EQUAL TO -1)
+        fieldsAround = fieldsAround.filter(field=>{
+          return field[0]!==-1
         })
       }
-      if(col===Math.floor(field.length/h)-1){
-        //DONT CHECK RIGHT COLUMN
-        coordinates = coordinates.filter(item=>{
-          return item[0]!==1
+      if(col===Math.floor(mineField.length/height)-1){
+        //EXCLUDE RIGHT COLUMN (WITH FIRST VALUE EQUAL TO 1)
+        fieldsAround = fieldsAround.filter(field=>{
+          return field[0]!==1
         })
       }
-      // WE COUNT NEW VALUE BY CHECKING IF FIELDS AROUND HAVE MINE (THEY EQUAL TO -1)
-      field[row*w+col] = coordinates.reduce((acc,current)=>field[ ( row + current[1] )* w + col + current[0] ] === -1 ? ++acc : acc, 0)
+      // WE COUNT NEW VALUE BY CHECKING IF FIELDS AROUND HAVE MINE (IF THEY EQUAL TO -1 THEN WE INCREMENT THE COUNTER)
+      mineField[row*width+col] = fieldsAround.reduce((acc,current)=>mineField[ ( row + current[1] )* width + col + current[0] ] === -1 ? ++acc : acc, 0)
     }
 
   }
-  return field;
+  return mineField;
 };

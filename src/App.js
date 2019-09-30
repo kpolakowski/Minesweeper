@@ -15,11 +15,12 @@ const Cell = props => {
 
 const levels = [
   {width:10,height:10,mines:10},
-  {width:15,height:15,mines:50},
-  {width:20,height:20,mines:100},
+  {width:15,height:15,mines:30},
+  {width:20,height:20,mines:50},
 ]
 
 export default class App extends React.Component {
+  
   constructor(props) {
     super(props);
     this.state = {
@@ -34,38 +35,45 @@ export default class App extends React.Component {
     this.changeLevel = this.changeLevel.bind(this);
   }
 
-  async handleClick(e) {
+  componentDidMount(){
+    //START NEW GAME ON LOADING
+    this.newGame()
+  }
+
+  handleClick(e) {
     e.preventDefault();
 
     if(this.state.finished){
       console.log("Game over");
       return;
     }
-    //LEFT CLICK
+
+    //HANDLE LEFT CLICK
     if(e.type==="click"){
-      //HANDLE FIELDS WITHOUT FLAG
+      //HANDLE ONLY FIELDS WITHOUT FLAG
       if(!e.target.hasAttribute("flag")){
         let value = this.state.board[e.target.dataset.index]
 
         if(value===-1){
-          //GAME OVER
+          //BOMB CLICKED, GAME OVER
           e.target.classList.add("bomb");
           this.setState({...this.state, finished:true})
         } if(value>=0){
+          //NON BOMB CLICKED
           e.target.classList.add("good");
           if(value===0){
-            //REVEAL ALL ZEROS
-            let empty = this.revealEmpty(e.target.dataset.index);
-            let max = empty.length;
-            for(let i = 0; i < max; i++){
-              if(this.state.board[empty[i]]===0){
-                let n = this.revealEmpty(empty[i]);
-                empty = empty.concat(n);
-                empty = empty.filter((num,index,arr)=>arr.indexOf(num)===index)
-                max = empty.length;
+            //REVEAL ALL NON BOMB FIELDS AROUND
+            let nonbombs = this.revealEmpty(e.target.dataset.index);
+            for(let i = 0; i < nonbombs.length; i++){
+              //IF FIELD IS EMPTY, REVEAL OTHERS AROUND IT
+              if(this.state.board[nonbombs[i]]===0){
+                let n = this.revealEmpty(nonbombs[i]);
+                nonbombs = nonbombs.concat(n);
+                //REMOVE DUPLICATES
+                nonbombs = nonbombs.filter((num,index,arr)=>arr.indexOf(num)===index)
               }
             }
-            empty.forEach((el)=>{
+            nonbombs.forEach((el)=>{
               document.querySelector(`.board button[data-index='${el}']`).classList.add("good");
               document.querySelector(`.board button[data-index='${el}']`).innerHTML = this.state.board[el]===0 ? "" : this.state.board[el];
             })
@@ -82,48 +90,46 @@ export default class App extends React.Component {
       }
 
     } else if(e.type==="contextmenu"){
-      //RIGHT CLICK
+      // HANDLE RIGHT CLICK
       if(!e.target.hasAttribute("flag")){
-        e.target.setAttribute("flag","")
+        e.target.setAttribute("flag","") //SET FLAG
       } else {
-        e.target.removeAttribute("flag");
+        e.target.removeAttribute("flag"); //REMOVE FLAG
       }
     }
   }
 
-  componentDidMount(){
-    this.newGame()
-  }
+  
 
   revealEmpty(index){
     const row = Math.floor(index / this.state.height);
     const col = index % this.state.width;
     index = parseInt(index,10);
 
-    let coordinates = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
+    let emptyFields = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
     if(row===0){
-      coordinates = coordinates.filter(item=>{
+      emptyFields = emptyFields.filter(item=>{
         return item[1]!==-1
       })
     }
     if(row===this.state.height-1){
-      coordinates = coordinates.filter(item=>{
+      emptyFields = emptyFields.filter(item=>{
         return item[1]!==1
       })
     }
     if(col===0){
-      coordinates = coordinates.filter(item=>{
+      emptyFields = emptyFields.filter(item=>{
         return item[0]!==-1
       })
     }
     if(col===this.state.width-1){
-      coordinates = coordinates.filter(item=>{
+      emptyFields = emptyFields.filter(item=>{
         return item[0]!==1
       })
     }
 
     
-    return coordinates
+    return emptyFields
     .map(current=>( row + current[1] )* this.state.width + col + current[0])
     .filter(current=>this.state.board[current]!==-1)
     .filter(current=>![...document.querySelector(`.board button[data-index='${current}']`).classList].includes("good"))
@@ -132,6 +138,7 @@ export default class App extends React.Component {
 
   changeLevel(e){
     const selected = e.target.options.selectedIndex;
+    //UPDATING STATE WITH CURRENTLY CHOSEN LEVEL
     this.setState({
       ...this.state,
       width: levels[selected].width,
@@ -141,12 +148,15 @@ export default class App extends React.Component {
   }
 
   newGame(){
+    //SET NEW WIDTH OF ROW
     document.querySelector(".board").setAttribute("style",`--col:${this.state.width}`)
+    //GENERATING NEW BOARD WITH VALUES FROM STATE
     this.setState({
       ...this.state,
       finished:false,
       board: minesweeper(this.state.width, this.state.height, this.state.mines)
     });
+    //RESET ALL THE BUTTONS
     [...document.querySelectorAll(".board button")].map(button=>{
       button.classList.remove(...button.classList);
       button.innerHTML = "";
@@ -158,19 +168,22 @@ export default class App extends React.Component {
   render() {
     return (
       <div className="App">
+
         <div className="board">
           {this.state.board.map((item,index)=>{
             return <Cell key={index} onClick={this.handleClick} index={index} flag></Cell>
           })}
         </div>
+
         <div className="menu">
           <select name="" id="" onChange={this.changeLevel}>
             <option value="1">EASY (10x10 / 10 mines)</option>
-            <option value="2">MEDIUM (30x30 / 50 mines)</option>
-            <option value="3">HARD (50x50 / 1000mines)</option>
+            <option value="2">MEDIUM (15x15 / 30 mines)</option>
+            <option value="3">HARD (20x20 / 50 mines)</option>
           </select>
           <button onClick={this.newGame}>Reset</button>
         </div>
+
       </div>
     );
   }

@@ -13,11 +13,11 @@
 
  button[type="button"]{
     display:block;
-    border:1px solid #ccc;
+    border-width:3px;
     outline:none;
     height:30px; width:30px;
     font-weight: bold;
-    background-image: linear-gradient(to top,#ddd,#eee);
+    //background-image: linear-gradient(to top,#ddd,#eee);
     &[disabled]{
       color:yellow;
     }
@@ -27,6 +27,7 @@
     }
     &.good{
       background: #f6f6f6;
+      border-width:1px;
     }
     &.bomb{
       background: red;
